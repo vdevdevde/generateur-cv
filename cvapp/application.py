@@ -6,13 +6,13 @@ import sys
 import traceback
 from pathlib import Path
 
-from PySide6.QtCore import QLocale
+from PySide6.QtCore import QLocale, QSettings
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from . import NOM_APPLICATION, NOM_EXE
 from .moteur import DOSSIER_BASE
-from .style import appliquer_theme, police_texte
+from .style import appliquer_theme, definir_preference, police_texte
 
 
 def _preparer_journal():
@@ -65,6 +65,7 @@ def demarrer() -> int:
 
     # Un fichier .yaml donné au lancement (ex. : glissé sur l'icône du .exe)
     fichier = next((a for a in sys.argv[1:] if a.lower().endswith((".yaml", ".yml")) and os.path.isfile(a)), None)
+    definir_preference(QSettings(NOM_EXE, NOM_EXE).value("theme", "auto"))  # clair / sombre choisi
     appliquer_theme(application)  # avant la fenêtre : les icônes prennent les bonnes couleurs
     fenetre = FenetrePrincipale(fichier)
 

@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 from . import DEPOT_GITHUB, NOM_APPLICATION, NOM_EXE, VERSION, moteur, mise_a_jour
 from .formulaire import Formulaire, bouton, etiquette
 from .moteur import ErreurCV
-from .style import couleurs_actuelles
+from .style import appliquer_theme, associer_icone, couleurs_actuelles, definir_preference, mode_sombre_actif
 from .pdf import JS_HAUTEUR, charger_html, depassement_mm, mise_en_page_a4
 
 journal = logging.getLogger(__name__)
@@ -94,6 +94,9 @@ class FenetrePrincipale(QMainWindow):
         b_ouvrir = bouton("Ouvrir…", aide="Ouvrir un fichier de CV .yaml (Ctrl+O)", icone="ouvrir")
         b_copie = bouton("Enregistrer sous…", aide="Enregistrer une copie de ce CV sous un autre nom",
                          icone="enregistrer")
+        self.b_theme = bouton("", aide="Changer de thème : clair ou sombre")
+        self.b_theme.clicked.connect(self._basculer_theme)
+        self._etiqueter_bouton_theme()
         b_nouveau.clicked.connect(self.nouveau)
         b_ouvrir.clicked.connect(self.ouvrir)
         b_copie.clicked.connect(self.enregistrer_sous)
@@ -119,7 +122,7 @@ class FenetrePrincipale(QMainWindow):
         outils.setSpacing(8)
         outils.addWidget(EnTete())
         outils.addSpacing(18)
-        for b in (b_nouveau, b_ouvrir, b_copie):
+        for b in (b_nouveau, b_ouvrir, b_copie, self.b_theme):
             outils.addWidget(b)
         outils.addStretch(1)
         outils.addWidget(etiquette("Modèle", "discret"))
@@ -585,8 +588,25 @@ class FenetrePrincipale(QMainWindow):
     # ------------------------------------------------------------------
 
     def theme_change(self):
-        """Windows est passé en mode clair ou sombre : on redessine l'aperçu."""
+        """Le thème a changé (bouton ou réglage de Windows) : on redessine l'aperçu."""
+        self._etiqueter_bouton_theme()
         self._rafraichir_apercu()
+
+    def _etiqueter_bouton_theme(self):
+        # Le bouton propose l'autre thème : « Clair » quand on est en sombre, et inversement
+        if mode_sombre_actif():
+            self.b_theme.setText("Clair")
+            associer_icone(self.b_theme, "soleil", "texte", 15)
+        else:
+            self.b_theme.setText("Sombre")
+            associer_icone(self.b_theme, "lune", "texte", 15)
+
+    def _basculer_theme(self):
+        nouveau = "clair" if mode_sombre_actif() else "sombre"
+        definir_preference(nouveau)
+        self.reglages.setValue("theme", nouveau)  # retenu pour les prochains démarrages
+        appliquer_theme(QApplication.instance())
+        self.theme_change()
 
     def closeEvent(self, evenement):
         self.enregistrer()

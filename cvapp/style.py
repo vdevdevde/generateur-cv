@@ -73,9 +73,12 @@ GLYPHES = {
     "ia": "",            # ampoule
     "dossier": "",       # dossier
     "maj": "",           # flèches de mise à jour
+    "soleil": "",        # thème clair
+    "lune": "",          # thème sombre
 }
 
 _couleurs = CLAIR
+_preference = "auto"   # "auto" (suit Windows), "clair" ou "sombre"
 _icones_suivies: list[tuple] = []   # (widget, nom, clé de couleur, taille) à redessiner au changement de thème
 
 
@@ -123,6 +126,8 @@ def pixmap_icone(nom: str, couleur: str, taille: int = 16) -> QPixmap:
 def associer_icone(widget, nom: str, cle_couleur: str = "texte", taille: int = 16):
     """Met une icône sur un bouton ou un texte, et la recolore quand le thème change."""
     _poser_icone(widget, nom, cle_couleur, taille)
+    # Une seule icône suivie par widget : la nouvelle remplace l'ancienne
+    _icones_suivies[:] = [e for e in _icones_suivies if e[0]() is not widget]
     _icones_suivies.append((weakref.ref(widget), nom, cle_couleur, taille))
 
 
@@ -149,7 +154,15 @@ def _rafraichir_icones():
     _icones_suivies[:] = vivantes
 
 
+def definir_preference(preference: str):
+    """Choix de l'utilisateur : "clair", "sombre" ou "auto" (comme Windows)."""
+    global _preference
+    _preference = preference if preference in ("clair", "sombre") else "auto"
+
+
 def mode_sombre_actif() -> bool:
+    if _preference != "auto":
+        return _preference == "sombre"
     return QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
 
 
