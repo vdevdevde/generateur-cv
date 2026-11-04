@@ -1,0 +1,100 @@
+{#- Morceaux réutilisés par les deux modèles (« macros » Jinja).
+    Chaque bloc ne s'affiche que s'il y a quelque chose à montrer. -#}
+
+{% macro niveau(n) -%}
+  {%- if n is number -%}
+    <span class="points" title="{{ n }}/5">
+      {%- for i in range(1, 6) -%}
+        <span class="{{ 'plein' if i <= n else 'vide' }}">●</span>
+      {%- endfor -%}
+    </span>
+  {%- elif n -%}
+    <span class="niveau-texte">{{ n }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro profil(cv) -%}
+  {% if cv.profil %}
+  <section class="section">
+    <h2>Profil</h2>
+    <p class="profil">{{ cv.profil }}</p>
+  </section>
+  {% endif %}
+{%- endmacro %}
+
+{% macro experiences(cv) -%}
+  {% if cv.experiences %}
+  <section class="section">
+    <h2>Expériences</h2>
+    {% for e in cv.experiences %}
+    <div class="element">
+      <div class="ligne-titre">
+        <span class="intitule">{{ e.poste }}</span>
+        {% if e.dates %}<span class="dates">{{ e.dates }}</span>{% endif %}
+      </div>
+      {% set lieu = [e.entreprise, e.ville] | select | join(' · ') %}
+      {% if lieu %}<div class="sous-titre">{{ lieu }}</div>{% endif %}
+      {% if e.missions %}
+      <ul class="missions">
+        {% for m in e.missions %}<li>{{ m }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+{%- endmacro %}
+
+{% macro formations(cv) -%}
+  {% if cv.formations %}
+  <section class="section">
+    <h2>Formations</h2>
+    {% for f in cv.formations %}
+    <div class="element">
+      <div class="ligne-titre">
+        <span class="intitule">{{ f.diplome }}</span>
+        {% if f.dates %}<span class="dates">{{ f.dates }}</span>{% endif %}
+      </div>
+      {% if f.ecole %}<div class="sous-titre">{{ f.ecole }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+{%- endmacro %}
+
+{% macro competences(cv) -%}
+  {% if cv.competences %}
+  <section class="section">
+    <h2>Compétences</h2>
+    <ul class="liste-simple">
+      {% for c in cv.competences %}
+      <li><span>{{ c.nom }}</span>{{ niveau(c.niveau) }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+{%- endmacro %}
+
+{% macro langues(cv) -%}
+  {% if cv.langues %}
+  <section class="section">
+    <h2>Langues</h2>
+    <ul class="liste-simple">
+      {% for l in cv.langues %}
+      <li><span>{{ l.langue }}</span>{{ niveau(l.niveau) }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+{%- endmacro %}
+
+{% macro centres_interet(cv) -%}
+  {% if cv.centres_interet %}
+  <section class="section">
+    <h2>Centres d'intérêt</h2>
+    <ul class="liste-simple">
+      {% for c in cv.centres_interet %}<li><span>{{ c }}</span></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+{%- endmacro %}

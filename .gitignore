@@ -1,0 +1,15 @@
+# Outils installés localement (recréés par construire.bat)
+.venv/
+
+# Fichiers produits par la fabrication de l'application
+build/
+dist/
+*.spec
+
+# CV créés avec la version « sans fenêtre »
+sortie/
+
+# Fichiers temporaires de Python
+__pycache__/
+*.pyc
+*.tmp

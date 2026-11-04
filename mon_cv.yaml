@@ -1,0 +1,127 @@
+# ============================================================================
+#  MON CV — fichier d'informations
+# ============================================================================
+#
+#  Comment ça marche ?
+#  1. Remplacez le texte des exemples par vos propres informations.
+#  2. Enregistrez le fichier (Ctrl + S).
+#  3. Double-cliquez sur « Generer_mon_CV.bat ».
+#     Le PDF est créé dans le dossier « sortie » et s'ouvre tout seul.
+#
+#  Les 4 règles à connaître :
+#  - Les lignes qui commencent par « # » sont des commentaires : le programme
+#    les ignore. Ils sont là pour vous aider.
+#  - Gardez le décalage (les espaces au début des lignes) tel quel.
+#    Utilisez des ESPACES, jamais la touche Tabulation.
+#  - Si un texte contient le signe « : » ou commence par un caractère
+#    spécial (« - », « # », « @ », « * »…), mettez-le "entre guillemets".
+#  - Pour retirer un champ ou une section : effacez-la, ou laissez-la vide.
+#    Elle n'apparaîtra tout simplement pas dans le CV.
+# ============================================================================
+
+
+# --- Modèle de mise en page -------------------------------------------------
+# Deux choix possibles :
+#   classique : une seule colonne
+#   moderne   : une colonne grise à gauche (photo, contacts, compétences,
+#               langues) et le contenu principal à droite
+modele: moderne
+
+
+# --- Identité ---------------------------------------------------------------
+identite:
+  prenom: Camille
+  nom: Durand
+  titre: Développeuse junior          # Le poste que vous visez
+  ville: Lyon
+  email: camille.durand@exemple.fr
+  telephone: 06 12 34 56 78
+  site_web: camilledurand.fr          # Facultatif : effacez la ligne si besoin
+  linkedin: linkedin.com/in/camille-durand   # Facultatif
+
+
+# --- Photo (facultative) ----------------------------------------------------
+# Indiquez le chemin vers votre photo (JPG ou PNG). Le plus simple : mettez
+# la photo dans le même dossier que ce fichier et écrivez juste son nom,
+# par exemple :   photo: ma_photo.jpg
+# Laissez vide pour ne pas mettre de photo.
+photo:
+
+
+# --- Profil -----------------------------------------------------------------
+# Un court paragraphe (3 à 4 lignes) qui vous présente.
+# Le « > » permet d'écrire le texte sur plusieurs lignes : décalez-les
+# simplement de deux espaces, comme ci-dessous.
+profil: >
+  Développeuse junior passionnée par le web et les outils simples à utiliser.
+  Après une reconversion réussie, je cherche un premier poste où apprendre
+  vite, travailler en équipe et construire des applications utiles.
+
+
+# --- Expériences professionnelles -------------------------------------------
+# Une expérience commence par un tiret « - ». Copiez-collez un bloc entier
+# pour en ajouter une. Mettez la plus récente en premier.
+experiences:
+  - poste: Développeuse web (stage)
+    entreprise: Atelier Numérique
+    ville: Lyon
+    dates: Mars 2025 – Août 2025
+    missions:
+      - Création d'un site de réservation en Python et JavaScript
+      - Mise en place de tests automatiques pour éviter les régressions
+      - Participation aux réunions d'équipe et aux revues de code
+
+  - poste: Conseillère clientèle
+    entreprise: Banque du Rhône
+    ville: Villeurbanne
+    dates: 2021 – 2024
+    missions:
+      - Accompagnement d'un portefeuille de 300 clients particuliers
+      - Création de tableaux de suivi qui ont fait gagner 2 h par semaine
+
+
+# --- Formations -------------------------------------------------------------
+formations:
+  - diplome: Titre professionnel Développeur web
+    ecole: École du Code, Lyon
+    dates: 2024 – 2025
+
+  - diplome: Licence Économie et gestion
+    ecole: Université Lyon 2
+    dates: 2018 – 2021
+
+
+# --- Compétences ------------------------------------------------------------
+# Le niveau est facultatif. Deux façons de l'écrire :
+#   - un chiffre de 1 à 5  → affiché avec des petits points (●●●○○)
+#   - un mot ou une phrase → affiché tel quel (ex : « Notions »)
+# Pour une compétence sans niveau, écrivez seulement :   - nom: Git
+competences:
+  - nom: Python
+    niveau: 4
+  - nom: HTML / CSS
+    niveau: 4
+  - nom: JavaScript
+    niveau: 3
+  - nom: SQL
+    niveau: 3
+  - nom: Git
+  - nom: Travail en équipe
+
+
+# --- Langues ----------------------------------------------------------------
+langues:
+  - langue: Français
+    niveau: Langue maternelle
+  - langue: Anglais
+    niveau: Courant (B2)
+  - langue: Espagnol
+    niveau: Notions
+
+
+# --- Centres d'intérêt ------------------------------------------------------
+# Une ligne par centre d'intérêt, chacune commençant par un tiret.
+centres_interet:
+  - Randonnée en montagne
+  - Photographie
+  - Bénévolat dans une association d'aide aux devoirs

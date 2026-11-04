@@ -1,0 +1,79 @@
+{#- Modèle « classique » : une seule colonne. -#}
+{% import "_blocs.html" as b %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>CV {{ cv.identite.prenom }} {{ cv.identite.nom }}</title>
+<style>
+{% include "commun.css" %}
+
+/* --- Propre au modèle classique ---------------------------------------- */
+.cv {
+  padding: 20mm 21mm 18mm;
+  /* Si le CV déborde sur une 2e page, les marges sont reprises sur celle-ci */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18pt;
+  padding-bottom: 14pt;
+  border-bottom: 0.5pt solid var(--noir);
+}
+.contacts {
+  margin-top: 9pt;
+  color: var(--gris-fonce);
+  font-size: 8.6pt;
+}
+.contacts span + span::before { content: "·"; margin: 0 6pt; color: var(--gris); }
+.photo {
+  width: 27mm;
+  height: 27mm;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: grayscale(100%);
+  flex-shrink: 0;
+}
+.trois-colonnes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 18pt;
+  break-inside: avoid;
+}
+</style>
+</head>
+<body>
+{% if apercu %}<div class="apercu-limite"><span>fin de la page 1</span></div>{% endif %}
+<main class="cv">
+
+  <header class="entete">
+    <div>
+      <h1 class="nom">{{ cv.identite.prenom }} <strong>{{ cv.identite.nom }}</strong></h1>
+      {% if cv.identite.titre %}<div class="titre">{{ cv.identite.titre }}</div>{% endif %}
+      {% if contacts %}
+      <div class="contacts">
+        {% for c in contacts %}<span>{{ c.valeur }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% if photo %}<img class="photo" src="{{ photo }}" alt="">{% endif %}
+  </header>
+
+  {{ b.profil(cv) }}
+  {{ b.experiences(cv) }}
+  {{ b.formations(cv) }}
+
+  {% if cv.competences or cv.langues or cv.centres_interet %}
+  <div class="trois-colonnes">
+    {% if cv.competences %}<div>{{ b.competences(cv) }}</div>{% endif %}
+    {% if cv.langues %}<div>{{ b.langues(cv) }}</div>{% endif %}
+    {% if cv.centres_interet %}<div>{{ b.centres_interet(cv) }}</div>{% endif %}
+  </div>
+  {% endif %}
+
+</main>
+</body>
+</html>

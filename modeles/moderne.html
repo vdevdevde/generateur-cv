@@ -1,0 +1,96 @@
+{#- Modèle « moderne » : colonne latérale grise à gauche, contenu à droite. -#}
+{% import "_blocs.html" as b %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>CV {{ cv.identite.prenom }} {{ cv.identite.nom }}</title>
+<style>
+{% include "commun.css" %}
+
+/* --- Propre au modèle moderne ------------------------------------------ */
+:root { --largeur-colonne: 68mm; }
+
+/* Le fond gris de la colonne : « fixed » le répète sur chaque page,
+   au cas où le CV déborderait sur une 2e page. */
+.fond-colonne {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--largeur-colonne);
+  background: var(--fond-gris);
+  border-right: 0.5pt solid var(--gris-clair);
+}
+.cv {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--largeur-colonne) 1fr;
+}
+.colonne, .principal {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.colonne { padding: 20mm 9mm 16mm 10mm; }
+.principal { padding: 20mm 17mm 16mm 13mm; }
+
+.colonne .section:first-child { margin-top: 0; }
+.colonne .section h2 { border-bottom-color: #c8c8c8; }
+
+.photo {
+  display: block;
+  width: 34mm;
+  height: 34mm;
+  margin: 0 auto 18pt;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: grayscale(100%);
+}
+.contact-item { margin-bottom: 6pt; overflow-wrap: anywhere; }
+.contact-item .etiquette {
+  display: block;
+  font-size: 7pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+.entete { padding-bottom: 2pt; }
+.principal .section:first-of-type { margin-top: 20pt; }
+</style>
+</head>
+<body>
+{% if apercu %}<div class="apercu-limite"><span>fin de la page 1</span></div>{% endif %}
+<div class="fond-colonne"></div>
+<main class="cv">
+
+  <aside class="colonne">
+    {% if photo %}<img class="photo" src="{{ photo }}" alt="">{% endif %}
+
+    {% if contacts %}
+    <section class="section">
+      <h2>Contact</h2>
+      {% for c in contacts %}
+      <div class="contact-item">
+        <span class="etiquette">{{ c.etiquette }}</span>{{ c.valeur }}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {{ b.competences(cv) }}
+    {{ b.langues(cv) }}
+    {{ b.centres_interet(cv) }}
+  </aside>
+
+  <div class="principal">
+    <header class="entete">
+      <h1 class="nom">{{ cv.identite.prenom }}<br><strong>{{ cv.identite.nom }}</strong></h1>
+      {% if cv.identite.titre %}<div class="titre">{{ cv.identite.titre }}</div>{% endif %}
+    </header>
+
+    {{ b.profil(cv) }}
+    {{ b.experiences(cv) }}
+    {{ b.formations(cv) }}
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,154 @@
+/* ==========================================================================
+   Styles communs aux deux modèles.
+   Couleurs : uniquement du noir, du blanc et des gris.
+   Astuce : pour changer une couleur ou une taille partout d'un coup,
+   modifiez les « variables » ci-dessous.
+   ========================================================================== */
+
+:root {
+  --noir: #111111;
+  --gris-fonce: #444444;
+  --gris: #777777;
+  --gris-clair: #d4d4d4;   /* traits fins */
+  --fond-gris: #f2f2f2;    /* colonne latérale du modèle « moderne » */
+  --taille-texte: 9.4pt;
+}
+
+/* Police : Inter si elle est disponible (installée sur l'ordinateur ou
+   placée dans le dossier « polices »), sinon Segoe UI, la police moderne
+   de Windows. */
+@font-face {
+  font-family: "Inter CV";
+  src: {% if police_inter %}url("{{ police_inter }}"), {% endif %}local("Inter Variable"), local("Inter");
+  font-weight: 100 900;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: "Inter CV", "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif;
+  font-size: var(--taille-texte);
+  line-height: 1.5;
+  color: var(--noir);
+  background: #ffffff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* --- En-tête : nom et titre --------------------------------------------- */
+.nom {
+  font-size: 25pt;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.nom strong { font-weight: 650; }
+.titre {
+  margin-top: 4pt;
+  font-size: 10.5pt;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+
+/* --- Titres de section : discrets, petites capitales espacées ------------ */
+.section { margin-top: 16pt; }
+.section h2 {
+  font-size: 7.6pt;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gris);
+  padding-bottom: 4pt;
+  border-bottom: 0.5pt solid var(--gris-clair);
+  margin-bottom: 8pt;
+}
+
+/* --- Expériences et formations ------------------------------------------- */
+.element { margin-bottom: 9pt; break-inside: avoid; }
+.element:last-child { margin-bottom: 0; }
+.ligne-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10pt;
+}
+.ligne-titre .intitule { font-weight: 600; }
+.ligne-titre .dates {
+  flex-shrink: 0;
+  font-size: 8.4pt;
+  color: var(--gris);
+  font-variant-numeric: tabular-nums;
+}
+.sous-titre { color: var(--gris-fonce); }
+.missions { margin-top: 3pt; list-style: none; }
+.missions li {
+  position: relative;
+  padding-left: 11pt;
+  color: var(--gris-fonce);
+}
+.missions li::before {
+  content: "";
+  position: absolute;
+  left: 2pt;
+  top: 0.68em;
+  width: 4pt;
+  border-top: 0.6pt solid var(--gris);
+}
+
+.profil { color: var(--gris-fonce); }
+
+/* --- Compétences, langues, centres d'intérêt ----------------------------- */
+.liste-simple { list-style: none; }
+.liste-simple li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8pt;
+  padding: 1.6pt 0;
+}
+.liste-simple .niveau-texte { color: var(--gris); font-size: 8.4pt; text-align: right; }
+.points { letter-spacing: 1.5pt; font-size: 7pt; white-space: nowrap; }
+.points .plein { color: var(--noir); }
+.points .vide { color: var(--gris-clair); }
+
+{% if apercu %}
+/* --- Habillage de l'aperçu dans l'application (jamais imprimé) ---------- */
+@media screen {
+  html { background: #d6d6d6; padding: 22px 0 40px; }
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.16);
+  }
+  html .fond-colonne { position: absolute; height: 100%; }
+  .apercu-limite {
+    display: none;
+    position: absolute;
+    left: 0; right: 0;
+    top: 297mm;
+    border-top: 1.5px dashed #7a7a7a;
+    z-index: 10;
+  }
+  .apercu-limite span {
+    position: absolute;
+    right: 6mm; top: 2px;
+    font-size: 8pt;
+    color: #fff;
+    background: #555;
+    padding: 1px 6px;
+  }
+  .depasse .apercu-limite { display: block; }
+}
+@media print { .apercu-limite { display: none; } }
+{% endif %}
