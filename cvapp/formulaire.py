@@ -285,6 +285,7 @@ CHAMPS_LANGUE = [("langue", "Langue", "ligne", "Langue (ex. : Anglais)"),
 
 class Formulaire(QWidget):
     modifie = Signal()
+    demande_ia = Signal()  # clic sur « écrire avec l'ia »
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -334,7 +335,16 @@ class Formulaire(QWidget):
         disposition.addLayout(ligne_photo)
 
         # --- Profil ---
-        titre("> profil", "Un court paragraphe (3 à 4 lignes) qui vous présente.")
+        titre("> profil")
+        ligne_profil = QHBoxLayout()
+        ligne_profil.addWidget(etiquette("Un court paragraphe (3 à 4 lignes) qui vous présente.",
+                                         "discret", retour_ligne=True), 1)
+        bouton_ia = bouton("✦ écrire avec l'ia", aide="Vous ne savez pas quoi mettre ? "
+                           "Décrivez-vous en quelques mots et l'IA rédige le paragraphe.")
+        bouton_ia.clicked.connect(self.demande_ia)
+        ligne_profil.addWidget(bouton_ia, 0, Qt.AlignmentFlag.AlignBottom)
+        disposition.addLayout(ligne_profil)
+        disposition.addSpacing(4)
         self.profil = texte_multiligne(92, "Développeuse junior passionnée par…")
         self.profil.textChanged.connect(self._signaler)
         disposition.addWidget(self.profil)

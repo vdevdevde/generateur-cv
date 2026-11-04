@@ -10,6 +10,12 @@ se mettre à jour en direct à droite.
 - **Enregistrement automatique** dans `Documents\Générateur de CV\mon_cv.yaml`.
 - **Le PDF** est créé dans `Documents\Générateur de CV\sortie\CV_Prenom_Nom.pdf`,
   puis s'ouvre tout seul.
+- **Profil rédigé par l'IA** : vous ne savez pas quoi écrire ? Cliquez sur
+  **✦ écrire avec l'ia**, décrivez-vous en quelques mots, et Claude (Anthropic)
+  rédige le paragraphe à partir de votre CV. Il faut une clé API Anthropic
+  ([en créer une](https://console.anthropic.com/settings/keys)), collée une seule fois
+  et gardée sur votre ordinateur ; chaque rédaction coûte 1 à 3 centimes.
+  Vos coordonnées (email, téléphone) ne sont jamais envoyées.
 - **Mises à jour automatiques** : quand une nouvelle version est publiée, un
   bandeau propose de l'installer en un clic.
 
@@ -57,6 +63,7 @@ choisie automatiquement.
 | `cvapp\moteur.py` | Lecture / écriture du `.yaml`, nettoyage, page HTML |
 | `cvapp\pdf.py` | Conversion HTML → PDF (moteur Chromium de Qt) |
 | `cvapp\formulaire.py` | Les champs du formulaire |
+| `cvapp\ia.py`, `cvapp\dialogue_ia.py` | Rédaction du profil par Claude (Anthropic) |
 | `cvapp\fenetre.py` | La fenêtre : barre d'outils, formulaire, aperçu |
 | `cvapp\style.py` | Les couleurs de l'application (clair / sombre) |
 | `cvapp\mise_a_jour.py` | Recherche et installation des nouvelles versions |

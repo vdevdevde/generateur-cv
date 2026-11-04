@@ -128,6 +128,7 @@ class FenetrePrincipale(QMainWindow):
         # --- Formulaire (à gauche) ---
         self.formulaire = Formulaire()
         self.formulaire.modifie.connect(self._sur_modification)
+        self.formulaire.demande_ia.connect(self.rediger_profil_ia)
         defilement = QScrollArea()
         defilement.setWidgetResizable(True)
         defilement.setWidget(self.formulaire)
@@ -384,6 +385,18 @@ class FenetrePrincipale(QMainWindow):
     def resizeEvent(self, evenement):
         super().resizeEvent(evenement)
         QTimer.singleShot(0, self._ajuster_zoom)
+
+    # ------------------------------------------------------------------
+    # Profil rédigé par l'IA
+    # ------------------------------------------------------------------
+
+    def rediger_profil_ia(self):
+        from .dialogue_ia import DialogueIA
+
+        dialogue = DialogueIA(self._cv_actuel(), self.formulaire.profil.toPlainText(), self)
+        if dialogue.exec() and dialogue.texte_choisi:
+            self.formulaire.profil.setPlainText(dialogue.texte_choisi)  # enregistré et affiché tout seul
+            self._afficher_message("> profil rédigé par l'ia : relisez-le dans l'aperçu")
 
     # ------------------------------------------------------------------
     # Création du PDF
