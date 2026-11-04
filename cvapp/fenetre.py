@@ -21,17 +21,18 @@ import threading
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QSettings, QStandardPaths, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QIcon, QKeySequence, QShortcut
+from PySide6.QtGui import QDesktopServices, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWebEngineCore import QWebEngineSettings
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (
-    QApplication, QButtonGroup, QFileDialog, QFrame, QHBoxLayout, QMainWindow, QMessageBox,
+    QApplication, QButtonGroup, QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
     QScrollArea, QSplitter, QVBoxLayout, QWidget,
 )
 
 from . import DEPOT_GITHUB, NOM_APPLICATION, NOM_EXE, VERSION, moteur, mise_a_jour
 from .formulaire import Formulaire, bouton, etiquette
 from .moteur import ErreurCV
+from .style import couleurs_actuelles
 from .pdf import JS_HAUTEUR, charger_html, depassement_mm, mise_en_page_a4
 
 journal = logging.getLogger(__name__)
@@ -45,27 +46,23 @@ def dossier_documents() -> Path:
 
 
 class EnTete(QWidget):
-    """« generateur_cv_ » avec un curseur qui clignote, et la version."""
+    """Le petit logo, le nom de l'application et sa version."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._curseur = etiquette("_", "logo")
-        self._curseur.setFixedWidth(self._curseur.sizeHint().width() + 2)
         ligne = QHBoxLayout(self)
         ligne.setContentsMargins(0, 0, 0, 0)
-        ligne.setSpacing(0)
-        ligne.addWidget(etiquette("generateur_cv", "logo"))
-        ligne.addWidget(self._curseur)
-        ligne.addStretch(1)
-        ligne.addWidget(etiquette(f"v{VERSION}", "discret"))
-        self._visible = True
-        minuteur = QTimer(self, interval=550)
-        minuteur.timeout.connect(self._clignoter)
-        minuteur.start()
-
-    def _clignoter(self):
-        self._visible = not self._visible
-        self._curseur.setText("_" if self._visible else " ")
+        ligne.setSpacing(9)
+        logo = QLabel()
+        image = QPixmap(str(moteur.DOSSIER_BASE / "ressources" / "icone.png"))
+        if not image.isNull():
+            image.setDevicePixelRatio(2)
+            logo.setPixmap(image.scaled(48, 48, Qt.AspectRatioMode.KeepAspectRatio,
+                                        Qt.TransformationMode.SmoothTransformation))
+        ligne.addWidget(logo)
+        ligne.addWidget(etiquette(NOM_APPLICATION, "logo"))
+        version = etiquette(f"v{VERSION}", "version")
+        ligne.addWidget(version, 0, Qt.AlignmentFlag.AlignBottom)
 
 
 class RelaisMiseAJour(QObject):
@@ -93,9 +90,10 @@ class FenetrePrincipale(QMainWindow):
         self._page_prete = False
 
         # --- Barre d'outils ---
-        b_nouveau = bouton("nouveau", aide="Commencer un nouveau CV vide (Ctrl+N)")
-        b_ouvrir = bouton("ouvrir…", aide="Ouvrir un fichier de CV .yaml (Ctrl+O)")
-        b_copie = bouton("enregistrer sous…", aide="Enregistrer une copie de ce CV sous un autre nom")
+        b_nouveau = bouton("Nouveau", aide="Commencer un nouveau CV vide (Ctrl+N)", icone="nouveau")
+        b_ouvrir = bouton("Ouvrir…", aide="Ouvrir un fichier de CV .yaml (Ctrl+O)", icone="ouvrir")
+        b_copie = bouton("Enregistrer sous…", aide="Enregistrer une copie de ce CV sous un autre nom",
+                         icone="enregistrer")
         b_nouveau.clicked.connect(self.nouveau)
         b_ouvrir.clicked.connect(self.ouvrir)
         b_copie.clicked.connect(self.enregistrer_sous)
@@ -103,7 +101,7 @@ class FenetrePrincipale(QMainWindow):
         self.choix_modele = QButtonGroup(self)
         self.boutons_modele = {}
         for cle, libelle in moteur.MODELES.items():
-            b = bouton(libelle.lower(), "choix", aide=f"Modèle « {libelle.lower()} »")
+            b = bouton(libelle, "choix", aide=f"Modèle « {libelle.lower()} »")
             b.setCheckable(True)
             self.choix_modele.addButton(b)
             self.boutons_modele[cle] = b
@@ -111,18 +109,23 @@ class FenetrePrincipale(QMainWindow):
         self.boutons_modele["classique"].setToolTip("Une seule colonne")
         self.boutons_modele["moderne"].setToolTip("Colonne grise à gauche, contenu à droite")
 
-        self.b_pdf = bouton("créer le pdf", "primaire", "Créer le CV en PDF et l'ouvrir (Ctrl+P)")
+        self.b_pdf = bouton("Créer le PDF", "primaire", "Créer le CV en PDF et l'ouvrir (Ctrl+P)", "pdf")
         self.b_pdf.clicked.connect(self.creer_pdf)
 
-        outils = QHBoxLayout()
+        barre = QFrame()
+        barre.setObjectName("barre")
+        outils = QHBoxLayout(barre)
+        outils.setContentsMargins(MARGE, 12, MARGE, 12)
         outils.setSpacing(8)
+        outils.addWidget(EnTete())
+        outils.addSpacing(18)
         for b in (b_nouveau, b_ouvrir, b_copie):
             outils.addWidget(b)
         outils.addStretch(1)
-        outils.addWidget(etiquette("modèle :", "discret"))
+        outils.addWidget(etiquette("Modèle", "discret"))
         outils.addWidget(self.boutons_modele["classique"])
         outils.addWidget(self.boutons_modele["moderne"])
-        outils.addSpacing(16)
+        outils.addSpacing(14)
         outils.addWidget(self.b_pdf)
 
         # --- Formulaire (à gauche) ---
@@ -133,7 +136,7 @@ class FenetrePrincipale(QMainWindow):
         defilement.setWidgetResizable(True)
         defilement.setWidget(self.formulaire)
         defilement.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        defilement.setMinimumWidth(430)
+        defilement.setMinimumWidth(460)
 
         # --- Aperçu (à droite) ---
         self.apercu = QWebEngineView()
@@ -161,10 +164,11 @@ class FenetrePrincipale(QMainWindow):
         separateur.setStretchFactor(1, 6)
         separateur.setHandleWidth(1)
         separateur.setChildrenCollapsible(False)
+        self.separateur = separateur
 
         # --- Bas : messages + bandeau de mise à jour ---
         self.message = etiquette("", "pied")
-        self.lien_dossier = bouton("[ouvrir le dossier]", "lien")
+        self.lien_dossier = bouton("Ouvrir le dossier", "lien", icone="dossier")
         self.lien_dossier.clicked.connect(self._ouvrir_dossier_pdf)
         self.lien_dossier.hide()
         bas = QFrame()
@@ -176,21 +180,11 @@ class FenetrePrincipale(QMainWindow):
         self.bandeau_maj = self._construire_bandeau_maj()
 
         # --- Assemblage ---
-        haut = QWidget()
-        d_haut = QVBoxLayout(haut)
-        d_haut.setContentsMargins(MARGE, 18, MARGE, 14)
-        d_haut.setSpacing(14)
-        d_haut.addWidget(EnTete())
-        d_haut.addLayout(outils)
-        trait = QFrame()
-        trait.setObjectName("ligne")
-
         centre = QWidget()
         disposition = QVBoxLayout(centre)
         disposition.setContentsMargins(0, 0, 0, 0)
         disposition.setSpacing(0)
-        disposition.addWidget(haut)
-        disposition.addWidget(trait)
+        disposition.addWidget(barre)
         disposition.addWidget(separateur, 1)
         disposition.addWidget(bas)
         disposition.addWidget(self.bandeau_maj)
@@ -238,7 +232,7 @@ class FenetrePrincipale(QMainWindow):
             self._rafraichir_apercu()
         if self.fichier == fichier:
             self._afficher_message(
-                f"> bienvenue ! remplacez l'exemple par vos informations : tout est enregistré "
+                f"Bienvenue ! Remplacez l'exemple par vos informations : tout est enregistré "
                 f"automatiquement dans {self._chemin_court(fichier)}", duree=20000)
 
     def _charger(self, chemin: Path, silencieux=False) -> bool:
@@ -269,10 +263,10 @@ class FenetrePrincipale(QMainWindow):
         try:
             moteur.enregistrer_fichier(self.donnees(), self.fichier)
         except OSError as erreur:
-            self._afficher_message(f"> impossible d'enregistrer : {erreur}")
+            self._afficher_message(f"Impossible d'enregistrer : {erreur}")
             return
         if manuel:
-            self._afficher_message(f"> enregistré dans {self._chemin_court(self.fichier)}")
+            self._afficher_message(f"Enregistré dans {self._chemin_court(self.fichier)}")
 
     def _choisir_fichier(self, titre: str, nom_propose: str) -> Path | None:
         dossier = self.fichier.parent if self.fichier else dossier_documents()
@@ -319,7 +313,7 @@ class FenetrePrincipale(QMainWindow):
             QMessageBox.warning(self, NOM_APPLICATION, f"Impossible d'enregistrer : {erreur}")
             return
         self._charger(chemin)
-        self._afficher_message(f"> copie enregistrée : {self._chemin_court(chemin)}")
+        self._afficher_message(f"Copie enregistrée : {self._chemin_court(chemin)}")
 
     # ------------------------------------------------------------------
     # Modifications et aperçu
@@ -341,10 +335,11 @@ class FenetrePrincipale(QMainWindow):
         self._minuteur_apercu.stop()
         dossier = self.fichier.parent if self.fichier else dossier_documents()
         try:
-            html = moteur.creer_html(self._cv_actuel(), dossier, apercu=True)
+            html = moteur.creer_html(self._cv_actuel(), dossier, apercu=True,
+                                     fond_apercu=couleurs_actuelles()["apercu"])
         except Exception as erreur:  # modèle HTML abîmé : on le dit sans planter
             journal.exception("Création de l'aperçu")
-            self.etat_page.setText(f"aperçu impossible : {erreur}")
+            self.etat_page.setText(f"Aperçu impossible : {erreur}")
             return
         page = self.apercu.page()
         if self._page_prete and not self._chargement_en_cours:
@@ -371,9 +366,9 @@ class FenetrePrincipale(QMainWindow):
         js = "document.documentElement.classList.toggle('depasse', %s)" % ("true" if depasse else "false")
         self.apercu.page().runJavaScript(js)
         if depasse:
-            self.etat_page.setText(f"⚠ le contenu dépasse d'environ {depasse} mm : le CV fera 2 pages")
+            self.etat_page.setText(f"⚠ Le contenu dépasse d'environ {depasse} mm : le CV fera 2 pages")
         else:
-            self.etat_page.setText("✓ le CV tient sur une page A4")
+            self.etat_page.setText("✓ Le CV tient sur une page A4")
         if self.pdf_demande:
             self._imprimer()
 
@@ -381,6 +376,14 @@ class FenetrePrincipale(QMainWindow):
         """L'aperçu montre toujours toute la largeur de la page."""
         largeur = max(self.apercu.width() - 18, 200)  # 18 : la barre de défilement
         self.apercu.setZoomFactor(max(0.25, min(1.6, largeur / (LARGEUR_PAGE_PX + 40))))
+
+    def showEvent(self, evenement):
+        super().showEvent(evenement)
+        if not getattr(self, "_partage_fait", False):
+            # Au premier affichage : formulaire et aperçu se partagent la largeur
+            self._partage_fait = True
+            largeur = self.separateur.width()
+            self.separateur.setSizes([int(largeur * 0.46), largeur - int(largeur * 0.46)])
 
     def resizeEvent(self, evenement):
         super().resizeEvent(evenement)
@@ -396,7 +399,7 @@ class FenetrePrincipale(QMainWindow):
         dialogue = DialogueIA(self._cv_actuel(), self.formulaire.profil.toPlainText(), self)
         if dialogue.exec() and dialogue.texte_choisi:
             self.formulaire.profil.setPlainText(dialogue.texte_choisi)  # enregistré et affiché tout seul
-            self._afficher_message("> profil rédigé par l'ia : relisez-le dans l'aperçu")
+            self._afficher_message("Profil rédigé par l'IA : relisez-le dans l'aperçu.")
 
     # ------------------------------------------------------------------
     # Création du PDF
@@ -418,7 +421,7 @@ class FenetrePrincipale(QMainWindow):
             return
         self.pdf_demande = sortie / moteur.nom_du_fichier(cv["identite"])
         self.b_pdf.setEnabled(False)
-        self._afficher_message("> création du pdf…", duree=0)
+        self._afficher_message("Création du PDF…", duree=0)
         # L'aperçu doit d'abord être à jour : on imprime une fois qu'il est prêt
         if self._minuteur_apercu.isActive() or self._chargement_en_cours or not self._page_prete:
             self._rafraichir_apercu()
@@ -438,14 +441,14 @@ class FenetrePrincipale(QMainWindow):
         self.b_pdf.setEnabled(True)
         chemin = Path(chemin)
         if not reussi:
-            self._afficher_message("> le pdf n'a pas pu être créé")
+            self._afficher_message("Le PDF n'a pas pu être créé.")
             QMessageBox.warning(
                 self, NOM_APPLICATION,
                 f"Impossible d'enregistrer « {chemin.name} ».\n\n"
                 "Il est peut-être ouvert dans un lecteur PDF : fermez-le, puis réessayez.")
             return
         self.dernier_pdf = chemin
-        self._afficher_message(f"> pdf créé : {chemin.name}", duree=0)
+        self._afficher_message(f"PDF créé : {chemin.name}", duree=0)
         self.lien_dossier.show()
         try:
             os.startfile(chemin)  # ouvre le PDF avec le lecteur habituel
@@ -489,7 +492,7 @@ class FenetrePrincipale(QMainWindow):
     def _message_par_defaut(self):
         self.lien_dossier.hide()
         if self.fichier:
-            self.message.setText(f"> enregistrement automatique : {self._chemin_court(self.fichier)}")
+            self.message.setText(f"Enregistrement automatique dans {self._chemin_court(self.fichier)}")
 
     # ------------------------------------------------------------------
     # Mise à jour (bandeau discret en bas de la fenêtre)
@@ -502,9 +505,9 @@ class FenetrePrincipale(QMainWindow):
         ligne.setContentsMargins(MARGE, 10, MARGE, 10)
         ligne.setSpacing(14)
         self.texte_maj = etiquette("")
-        self.bouton_maj = bouton("mettre à jour", "primaire")
+        self.bouton_maj = bouton("Mettre à jour", "primaire", icone="maj")
         self.bouton_maj.clicked.connect(self._installer_mise_a_jour)
-        self.bouton_plus_tard = bouton("[plus tard]", "lien")
+        self.bouton_plus_tard = bouton("Plus tard", "lien")
         self.bouton_plus_tard.clicked.connect(lambda: self.bandeau_maj.hide())
         ligne.addWidget(self.texte_maj, 1)
         ligne.addWidget(self.bouton_plus_tard)
@@ -515,7 +518,7 @@ class FenetrePrincipale(QMainWindow):
         self.relais_maj = RelaisMiseAJour(self)
         self.relais_maj.trouvee.connect(self._mise_a_jour_trouvee)
         self.relais_maj.progression.connect(
-            lambda p, t: self.texte_maj.setText(f"> {t.lower()} {p} %" if p >= 0 else f"> {t.lower()}"))
+            lambda p, t: self.texte_maj.setText(f"{t} {p} %" if p >= 0 else t))
         self.relais_maj.prete.connect(self._mise_a_jour_prete)
         self.relais_maj.echec.connect(self._mise_a_jour_echouee)
         return bandeau
@@ -531,8 +534,8 @@ class FenetrePrincipale(QMainWindow):
     def _mise_a_jour_trouvee(self, infos: dict):
         self.infos_maj = infos
         notes = f" — {infos['notes'].splitlines()[0]}" if infos.get("notes") else ""
-        self.texte_maj.setText(f"> nouvelle version disponible : v{infos['version']}{notes}")
-        self.bouton_maj.setText("mettre à jour")
+        self.texte_maj.setText(f"Nouvelle version disponible : v{infos['version']}{notes}")
+        self.bouton_maj.setText("Mettre à jour")
         self.bouton_maj.setEnabled(True)
         self.bouton_plus_tard.show()
         self.bandeau_maj.show()
@@ -548,7 +551,7 @@ class FenetrePrincipale(QMainWindow):
         self.enregistrer()
         self.bouton_maj.setEnabled(False)
         self.bouton_plus_tard.hide()
-        self.texte_maj.setText("> téléchargement…")
+        self.texte_maj.setText("Téléchargement…")
 
         def travail():
             try:
@@ -569,17 +572,21 @@ class FenetrePrincipale(QMainWindow):
         except Exception as erreur:
             self._mise_a_jour_echouee(str(erreur))
             return
-        self.texte_maj.setText("> redémarrage…")
+        self.texte_maj.setText("Redémarrage…")
         QTimer.singleShot(300, QApplication.instance().quit)
 
     def _mise_a_jour_echouee(self, message: str):
         QMessageBox.warning(self, NOM_APPLICATION, message)
-        self.texte_maj.setText("> la mise à jour n'a pas pu être installée")
-        self.bouton_maj.setText("réessayer")
+        self.texte_maj.setText("La mise à jour n'a pas pu être installée.")
+        self.bouton_maj.setText("Réessayer")
         self.bouton_maj.setEnabled(True)
         self.bouton_plus_tard.show()
 
     # ------------------------------------------------------------------
+
+    def theme_change(self):
+        """Windows est passé en mode clair ou sombre : on redessine l'aperçu."""
+        self._rafraichir_apercu()
 
     def closeEvent(self, evenement):
         self.enregistrer()

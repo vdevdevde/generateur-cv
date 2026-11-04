@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QButtonGroup, QDialog, QHBoxLayout, QLineEdit, QVB
 
 from . import NOM_EXE, ia
 from .formulaire import bouton, etiquette, texte_multiligne
+from .style import associer_icone
 
 
 class _Relais(QObject):
@@ -39,7 +40,7 @@ class DialogueIA(QDialog):
         d.setContentsMargins(26, 22, 26, 22)
         d.setSpacing(8)
 
-        d.addWidget(etiquette("> rédiger mon profil avec l'ia", "section"))
+        d.addWidget(etiquette("Rédiger mon profil avec l'IA", "section"))
         d.addWidget(etiquette(
             "Pas d'idée ? Décrivez-vous en quelques mots, comme à un ami : l'IA s'appuie sur ces mots "
             "et sur le reste de votre CV (expériences, formations, compétences) pour écrire un "
@@ -54,10 +55,10 @@ class DialogueIA(QDialog):
 
         # --- Ton ---
         ligne_ton = QHBoxLayout()
-        ligne_ton.addWidget(etiquette("ton :", "discret"))
+        ligne_ton.addWidget(etiquette("Ton", "discret"))
         self.groupe_ton = QButtonGroup(self)
         for i, ton in enumerate(ia.TONS):
-            b = bouton(ton, "choix")
+            b = bouton(ton.capitalize(), "choix")
             b.setCheckable(True)
             b.setChecked(i == 0)
             b.setProperty("ton", ton)
@@ -76,7 +77,7 @@ class DialogueIA(QDialog):
         self.saisie_cle = QLineEdit()
         self.saisie_cle.setEchoMode(QLineEdit.EchoMode.Password)
         self.saisie_cle.setPlaceholderText("sk-ant-…")
-        obtenir = bouton("[obtenir une clé]", "lien")
+        obtenir = bouton("Obtenir une clé", "lien")
         obtenir.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(ia.ADRESSE_CLES)))
         ligne_cle.addWidget(self.saisie_cle, 1)
         ligne_cle.addWidget(obtenir)
@@ -87,7 +88,7 @@ class DialogueIA(QDialog):
         d.addWidget(self.bloc_cle)
 
         self._cle = ia.cle_par_defaut(self._reglages.value("cle_api", ""))
-        self.changer_cle = bouton("[changer de clé]", "lien")
+        self.changer_cle = bouton("Changer de clé", "lien")
         self.changer_cle.clicked.connect(lambda: self._afficher_cle(True))
         self._afficher_cle(not self._cle)
 
@@ -110,11 +111,11 @@ class DialogueIA(QDialog):
         bas = QHBoxLayout()
         bas.addWidget(self.changer_cle)
         bas.addStretch(1)
-        annuler = bouton("annuler")
+        annuler = bouton("Annuler")
         annuler.clicked.connect(self.reject)
-        self.b_rediger = bouton("✦ rédiger", "primaire")
+        self.b_rediger = bouton("Rédiger", "primaire", icone="ia")
         self.b_rediger.clicked.connect(self._rediger)
-        self.b_utiliser = bouton("utiliser ce texte", "primaire")
+        self.b_utiliser = bouton("Utiliser ce texte", "primaire")
         self.b_utiliser.clicked.connect(self._utiliser)
         self.b_utiliser.hide()
         bas.addWidget(annuler)
@@ -137,7 +138,7 @@ class DialogueIA(QDialog):
         if self.bloc_cle.isVisible() and nouvelle:
             self._cle = nouvelle
         if not self._cle:
-            self.etat.setText("⚠ Collez d'abord votre clé API Anthropic ([obtenir une clé]).")
+            self.etat.setText("⚠ Collez d'abord votre clé API Anthropic (lien « Obtenir une clé »).")
             self._afficher_cle(True)
             return
 
@@ -148,7 +149,7 @@ class DialogueIA(QDialog):
 
         self.b_rediger.setEnabled(False)
         self.b_utiliser.setEnabled(False)
-        self.etat.setText("> l'ia rédige votre profil… (quelques secondes)")
+        self.etat.setText("L'IA rédige votre profil… (quelques secondes)")
 
         def travail():
             try:
@@ -168,11 +169,12 @@ class DialogueIA(QDialog):
         self.titre_resultat.show()
         self.resultat.show()
         self.resultat.setPlainText(texte)
-        self.etat.setText("✓ Relisez et retouchez si besoin. « réessayer » propose une autre version.")
-        self.b_rediger.setText("↻ réessayer")
+        self.etat.setText("✓ Relisez et retouchez si besoin. « Réessayer » propose une autre version.")
+        self.b_rediger.setText("Réessayer")
         self.b_rediger.setObjectName("")
         self.b_rediger.style().unpolish(self.b_rediger)
         self.b_rediger.style().polish(self.b_rediger)
+        associer_icone(self.b_rediger, "ia", "texte", 15)
         self.b_rediger.setEnabled(True)
         self.b_utiliser.setEnabled(True)
         self.b_utiliser.show()

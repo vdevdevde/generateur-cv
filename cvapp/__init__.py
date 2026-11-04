@@ -16,7 +16,7 @@ NOM_APPLICATION = "Générateur de CV"
 NOM_EXE = "GenerateurCV"  # nom du programme .exe et du dossier qui le contient
 
 # Numéro de version : à augmenter avant chaque publication (voir publier.bat)
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # Dépôt GitHub où sont publiées les nouvelles versions (« propriétaire/nom »)
 DEPOT_GITHUB = "vdevdevde/generateur-cv"

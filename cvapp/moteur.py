@@ -243,7 +243,7 @@ def _gabarits() -> Environment:
     return _environnement
 
 
-def creer_html(cv: dict, dossier_cv: Path, apercu: bool = False) -> str:
+def creer_html(cv: dict, dossier_cv: Path, apercu: bool = False, fond_apercu: str = "#d6d6d6") -> str:
     """Remplit le modèle choisi avec les informations du CV.
 
     apercu=True ajoute l'habillage de l'aperçu à l'écran (fond gris, ombre,
@@ -256,6 +256,7 @@ def creer_html(cv: dict, dossier_cv: Path, apercu: bool = False) -> str:
         contacts=liste_contacts(cv["identite"]),
         police_inter=police_inter([dossier_cv, DOSSIER_BASE]),
         apercu=apercu,
+        fond_apercu=fond_apercu,
     )
 
 

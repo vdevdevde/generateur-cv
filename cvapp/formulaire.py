@@ -14,20 +14,50 @@ from PySide6.QtWidgets import (
 )
 
 from .moteur import EXTENSIONS_PHOTO
+from .style import associer_icone
 
 
 # ---------------------------------------------------------------------------
 # Petites fonctions pratiques
 # ---------------------------------------------------------------------------
 
-def bouton(texte: str, nom: str | None = None, aide: str = "") -> QPushButton:
+def bouton(texte: str, nom: str | None = None, aide: str = "", icone: str | None = None) -> QPushButton:
+    """Crée un bouton. nom : "primaire" (plein), "ajout" (pastille), "petit" (icône seule),
+    "lien" (texte simple) ou "choix" (bouton à bascule). icone : un nom de style.GLYPHES."""
     b = QPushButton(texte)
     if nom:
         b.setObjectName(nom)
     if aide:
         b.setToolTip(aide)
+    if icone:
+        associer_icone(b, icone, "sur_accent" if nom == "primaire" else "texte",
+                       14 if nom == "petit" else 15)
     b.setCursor(Qt.CursorShape.PointingHandCursor)
     return b
+
+
+def carte(icone: str, titre: str, aide: str = "", droite: QWidget | None = None):
+    """Une carte arrondie avec son titre (et son icône). Renvoie (carte, disposition intérieure)."""
+    cadre = QFrame()
+    cadre.setObjectName("carte")
+    interieur = QVBoxLayout(cadre)
+    interieur.setContentsMargins(18, 14, 18, 18)
+    interieur.setSpacing(6)
+
+    en_tete = QHBoxLayout()
+    en_tete.setSpacing(8)
+    pictogramme = QLabel()
+    associer_icone(pictogramme, icone, "texte", 16)
+    en_tete.addWidget(pictogramme)
+    en_tete.addWidget(etiquette(titre, "titreCarte"))
+    en_tete.addStretch(1)
+    if droite is not None:
+        en_tete.addWidget(droite)
+    interieur.addLayout(en_tete)
+    if aide:
+        interieur.addWidget(etiquette(aide, "discret", retour_ligne=True))
+    interieur.addSpacing(4)
+    return cadre, interieur
 
 
 def etiquette(texte: str = "", nom: str | None = None, retour_ligne: bool = False) -> QLabel:
@@ -91,9 +121,9 @@ class Fiche(QFrame):
         self._champs = champs
         self._saisies = {}
 
-        b_haut = bouton("↑", "petit", "Monter")
-        b_bas = bouton("↓", "petit", "Descendre")
-        b_suppr = bouton("×", "petit", "Supprimer")
+        b_haut = bouton("", "petit", "Monter", "monter")
+        b_bas = bouton("", "petit", "Descendre", "descendre")
+        b_suppr = bouton("", "petit", "Supprimer", "supprimer")
         b_haut.clicked.connect(lambda: self.monter.emit(self))
         b_bas.clicked.connect(lambda: self.descendre.emit(self))
         b_suppr.clicked.connect(lambda: self.supprimer.emit(self))
@@ -115,7 +145,7 @@ class Fiche(QFrame):
 
         self.setObjectName("fiche")
         grille = QGridLayout(self)
-        grille.setContentsMargins(12, 10, 12, 12)
+        grille.setContentsMargins(14, 12, 14, 10)
         grille.setHorizontalSpacing(10)
         grille.setVerticalSpacing(3)
         rang, colonne = 0, 0
@@ -198,12 +228,12 @@ class SectionListe(QWidget):
         self._liste = QVBoxLayout()
         self._liste.setContentsMargins(0, 0, 0, 0)
         self._liste.setSpacing(6 if compacte else 10)
-        ajout = bouton(f"+ {texte_ajout}", "lien")
+        ajout = bouton(texte_ajout, "ajout", icone="ajouter")
         ajout.clicked.connect(self._ajouter_vide)
 
         disposition = QVBoxLayout(self)
         disposition.setContentsMargins(0, 0, 0, 0)
-        disposition.setSpacing(6)
+        disposition.setSpacing(10)
         disposition.addLayout(self._liste)
         disposition.addWidget(ajout, 0, Qt.AlignmentFlag.AlignLeft)
 
@@ -294,22 +324,18 @@ class Formulaire(QWidget):
         self.dossier_cv = Path.home()
 
         disposition = QVBoxLayout(self)
-        disposition.setContentsMargins(28, 18, 22, 28)
-        disposition.setSpacing(6)
+        disposition.setContentsMargins(20, 18, 16, 24)
+        disposition.setSpacing(14)
 
-        def titre(texte, aide=""):
-            if disposition.count():
-                disposition.addSpacing(18)
-            disposition.addWidget(etiquette(texte, "section"))
-            if aide:
-                disposition.addWidget(etiquette(aide, "discret", retour_ligne=True))
-            disposition.addSpacing(4)
+        def grille_de_champs():
+            g = QGridLayout()
+            g.setHorizontalSpacing(12)
+            g.setVerticalSpacing(4)
+            return g
 
         # --- Identité ---
-        titre("> identité")
-        grille = QGridLayout()
-        grille.setHorizontalSpacing(10)
-        grille.setVerticalSpacing(3)
+        cadre, d = carte("identite", "Identité")
+        grille = grille_de_champs()
         self.identite: dict[str, QLineEdit] = {}
         for i, (cle, libelle, exemple) in enumerate(CHAMPS_IDENTITE):
             saisie = QLineEdit()
@@ -319,57 +345,61 @@ class Formulaire(QWidget):
             rang, colonne = divmod(i, 2)
             grille.addWidget(etiquette(libelle, "champ"), rang * 2, colonne)
             grille.addWidget(saisie, rang * 2 + 1, colonne)
-        disposition.addLayout(grille)
+            if rang:
+                grille.setRowMinimumHeight(rang * 2, 22)
+        d.addLayout(grille)
+        disposition.addWidget(cadre)
 
         # --- Photo ---
-        titre("> photo", "Facultative. Elle est découpée en rond et passée en noir et blanc.")
+        cadre, d = carte("photo", "Photo", "Facultative. Elle est découpée en rond et passée en noir et blanc.")
         ligne_photo = QHBoxLayout()
-        self.texte_photo = etiquette("aucune photo", "discret")
-        choisir = bouton("choisir…")
+        self.texte_photo = etiquette("Aucune photo", "discret")
+        choisir = bouton("Choisir…", icone="ouvrir")
         choisir.clicked.connect(self._choisir_photo)
-        self.retirer_photo = bouton("[retirer]", "lien")
+        self.retirer_photo = bouton("Retirer", "lien")
         self.retirer_photo.clicked.connect(lambda: self._definir_photo(None, signaler=True))
         ligne_photo.addWidget(self.texte_photo, 1)
         ligne_photo.addWidget(self.retirer_photo)
         ligne_photo.addWidget(choisir)
-        disposition.addLayout(ligne_photo)
+        d.addLayout(ligne_photo)
+        disposition.addWidget(cadre)
 
         # --- Profil ---
-        titre("> profil")
-        ligne_profil = QHBoxLayout()
-        ligne_profil.addWidget(etiquette("Un court paragraphe (3 à 4 lignes) qui vous présente.",
-                                         "discret", retour_ligne=True), 1)
-        bouton_ia = bouton("✦ écrire avec l'ia", aide="Vous ne savez pas quoi mettre ? "
+        bouton_ia = bouton("Écrire avec l'IA", "ajout", icone="ia", aide="Vous ne savez pas quoi mettre ? "
                            "Décrivez-vous en quelques mots et l'IA rédige le paragraphe.")
         bouton_ia.clicked.connect(self.demande_ia)
-        ligne_profil.addWidget(bouton_ia, 0, Qt.AlignmentFlag.AlignBottom)
-        disposition.addLayout(ligne_profil)
-        disposition.addSpacing(4)
-        self.profil = texte_multiligne(92, "Développeuse junior passionnée par…")
+        cadre, d = carte("profil", "Profil", "Un court paragraphe (3 à 4 lignes) qui vous présente.", bouton_ia)
+        self.profil = texte_multiligne(96, "Développeuse junior passionnée par…")
         self.profil.textChanged.connect(self._signaler)
-        disposition.addWidget(self.profil)
+        d.addWidget(self.profil)
+        disposition.addWidget(cadre)
 
         # --- Listes ---
-        titre("> expériences", "La plus récente en premier.")
-        self.experiences = SectionListe(CHAMPS_EXPERIENCE, "ajouter une expérience")
-        disposition.addWidget(self.experiences)
+        cadre, d = carte("experiences", "Expériences", "La plus récente en premier.")
+        self.experiences = SectionListe(CHAMPS_EXPERIENCE, "Ajouter une expérience")
+        d.addWidget(self.experiences)
+        disposition.addWidget(cadre)
 
-        titre("> formations")
-        self.formations = SectionListe(CHAMPS_FORMATION, "ajouter une formation")
-        disposition.addWidget(self.formations)
+        cadre, d = carte("formations", "Formations")
+        self.formations = SectionListe(CHAMPS_FORMATION, "Ajouter une formation")
+        d.addWidget(self.formations)
+        disposition.addWidget(cadre)
 
-        titre("> compétences", "Niveau facultatif : 1 à 5 (points) ou un mot.")
-        self.competences = SectionListe(CHAMPS_COMPETENCE, "ajouter une compétence", compacte=True)
-        disposition.addWidget(self.competences)
+        cadre, d = carte("competences", "Compétences", "Niveau facultatif : 1 à 5 (points) ou un mot.")
+        self.competences = SectionListe(CHAMPS_COMPETENCE, "Ajouter une compétence", compacte=True)
+        d.addWidget(self.competences)
+        disposition.addWidget(cadre)
 
-        titre("> langues")
-        self.langues = SectionListe(CHAMPS_LANGUE, "ajouter une langue", compacte=True)
-        disposition.addWidget(self.langues)
+        cadre, d = carte("langues", "Langues")
+        self.langues = SectionListe(CHAMPS_LANGUE, "Ajouter une langue", compacte=True)
+        d.addWidget(self.langues)
+        disposition.addWidget(cadre)
 
-        titre("> centres d'intérêt", "Un par ligne.")
-        self.interets = texte_multiligne(80, "Randonnée\nPhotographie")
+        cadre, d = carte("interets", "Centres d'intérêt", "Un par ligne.")
+        self.interets = texte_multiligne(84, "Randonnée\nPhotographie")
         self.interets.textChanged.connect(self._signaler)
-        disposition.addWidget(self.interets)
+        d.addWidget(self.interets)
+        disposition.addWidget(cadre)
 
         disposition.addStretch(1)
 
@@ -394,7 +424,7 @@ class Formulaire(QWidget):
             self.texte_photo.setText(nom if chemin.is_file() else f"{nom} (introuvable)")
             self.retirer_photo.show()
         else:
-            self.texte_photo.setText("aucune photo")
+            self.texte_photo.setText("Aucune photo")
             self.retirer_photo.hide()
         if signaler:
             self._signaler()

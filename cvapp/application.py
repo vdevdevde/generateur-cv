@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from . import NOM_APPLICATION, NOM_EXE
 from .moteur import DOSSIER_BASE
-from .style import appliquer_theme, police_monospace
+from .style import appliquer_theme, police_texte
 
 
 def _preparer_journal():
@@ -53,7 +53,7 @@ def demarrer() -> int:
     application = QApplication(sys.argv)
     application.setApplicationName(NOM_APPLICATION)
     application.setStyle("Fusion")
-    application.setFont(police_monospace(10))
+    application.setFont(police_texte(9.5))
     QLocale.setDefault(QLocale(QLocale.Language.French, QLocale.Country.France))
     icone = DOSSIER_BASE / "ressources" / "icone.ico"
     if icone.exists():
@@ -65,12 +65,13 @@ def demarrer() -> int:
 
     # Un fichier .yaml donné au lancement (ex. : glissé sur l'icône du .exe)
     fichier = next((a for a in sys.argv[1:] if a.lower().endswith((".yaml", ".yml")) and os.path.isfile(a)), None)
+    appliquer_theme(application)  # avant la fenêtre : les icônes prennent les bonnes couleurs
     fenetre = FenetrePrincipale(fichier)
 
     def suivre_windows(*_):
         appliquer_theme(application)
+        fenetre.theme_change()
 
-    suivre_windows()
     application.styleHints().colorSchemeChanged.connect(suivre_windows)
     fenetre.show()
     return application.exec()
